@@ -1,20 +1,45 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
+	"net/http"
 	"os/exec"
+	"regexp"
 )
 
-func init() {
-	// This will execute the command to read the flag.
-	cmd := exec.Command("cat", "/root/flag.txt")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Println("Error reading flag:", err)
+var tmpl = template.Must(template.ParseFiles("index.html"))
+
+// Strict domain[:port]/path format
+var validURL = regexp.MustCompile(`^[a-zA-Z0-9.-]+(:[0-9]+)?\/[a-zA-Z0-9/_\-\.]+$`)
+
+func main() {
+	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/submit", submitHandler)
+
+	http.ListenAndServe(":5000", nil)
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl.Execute(w, "")
+}
+
+func submitHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	url := r.FormValue("url")
+
+	if !validURL.MatchString(url) {
+		tmpl.Execute(w, "❌ Invalid format. Use domain.com[:port]/package")
 		return
 	}
 
-	// Print the flag or output to the web application
-	fmt.Printf("Flag: %s\n", output)
-}
+	// No timeout, simple exec
+	cmd := exec.Command("go", "get", "-insecure", url)
+	cmdOutput, err := cmd.CombinedOutput()
 
+	output := string(cmdOutput)
+	if err != nil {
+		output += "\n[!] Error: " + err.Error()
+	}
+
+	tmpl.Execute(w, output)
+}
